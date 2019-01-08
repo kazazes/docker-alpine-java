@@ -66,11 +66,16 @@ for version in ${JAVA_VERSIONS[@]}; do
   JVM_MINOR=$(echo $version | cut -d- -f2)
   JVM_BUILD=$(echo $version | cut -d- -f3)
   JVM_TEMP=$(echo $version | cut -d- -f4)
-
+  case $(uname -m) in
+    "x86_64"|"i386"|"i686") ARCH=x64;;
+    "armv7l") ARCH=arm32-vfp-hflt;;
+    "armv8"|"aarch"*) ARCH=arm64-vfp-hflt;;
+    *) ARCH="x64";;
+  esac
   if [ "${JVM_MINOR}" -ge 121 ]; then
-    JVM_URL='http:\/\/download.oracle.com\/otn-pub\/java\/jdk\/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-b${JAVA_VERSION_BUILD}\/'${JVM_TEMP}'\/${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz'
+    JVM_URL='http:\/\/download.oracle.com\/otn-pub\/java\/jdk\/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-b${JAVA_VERSION_BUILD}\/'${JVM_TEMP}'\/${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-'
   else
-    JVM_URL='http:\/\/download.oracle.com\/otn-pub\/java\/jdk\/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-b${JAVA_VERSION_BUILD}\/${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64.tar.gz'
+    JVM_URL='http:\/\/download.oracle.com\/otn-pub\/java\/jdk\/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-b${JAVA_VERSION_BUILD}\/${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-'
   fi
 
   if [ "${JVM_MAJOR}" -eq "7" ]; then

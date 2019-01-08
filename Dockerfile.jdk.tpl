@@ -20,6 +20,12 @@ ENV JAVA_VERSION_MAJOR=%JVM_MAJOR% \
 # do all in one step
 RUN set -ex && \
     [[ ${JAVA_VERSION_MAJOR} != 7 ]] || ( echo >&2 'Oracle no longer publishes JAVA7 packages' && exit 1 ) && \
+    case $(uname -m) in \
+    "x86_64"|"i386"|"i686") export ARCH=x64;; \
+    "armv7l") export ARCH=arm32-vfp-hflt;; \
+    "armv8"|"aarch"*) export ARCH=arm64-vfp-hflt;; \
+    *) export ARCH="x64";; \
+    esac && \
     apk -U upgrade && \
     apk add libstdc++ curl ca-certificates bash && \
     for pkg in glibc-${GLIBC_VERSION} glibc-bin-${GLIBC_VERSION} glibc-i18n-${GLIBC_VERSION}; do curl -sSL ${GLIBC_REPO}/releases/download/${GLIBC_VERSION}/${pkg}.apk -o /tmp/${pkg}.apk; done && \
@@ -30,8 +36,8 @@ RUN set -ex && \
     /usr/glibc-compat/sbin/ldconfig /lib /usr/glibc-compat/lib && \
     mkdir /opt && \
     curl -jksSLH "Cookie: oraclelicense=accept-securebackup-cookie" -o /tmp/java.tar.gz \
-      %JVM_URL% && \
-    JAVA_PACKAGE_SHA256=$(curl -sSL https://www.oracle.com/webfolder/s/digest/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}checksum.html | grep -E "${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-x64\.tar\.gz" | grep -Eo '(sha256: )[^<]+' | cut -d: -f2 | xargs) && \
+      %JVM_URL%${ARCH}.tar.gz && \
+    JAVA_PACKAGE_SHA256=$(curl -sSL https://www.oracle.com/webfolder/s/digest/${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}checksum.html | grep -E "${JAVA_PACKAGE}-${JAVA_VERSION_MAJOR}u${JAVA_VERSION_MINOR}-linux-${ARCH}\.tar\.gz" | grep -Eo '(sha256: )[^<]+' | cut -d: -f2 | xargs) && \
     echo "${JAVA_PACKAGE_SHA256}  /tmp/java.tar.gz" > /tmp/java.tar.gz.sha256 && \
     sha256sum -c /tmp/java.tar.gz.sha256 && \
     gunzip /tmp/java.tar.gz && \
@@ -65,13 +71,13 @@ RUN set -ex && \
            /opt/jdk/jre/lib/desktop \
            /opt/jdk/jre/lib/*javafx* \
            /opt/jdk/jre/lib/*jfx* \
-           /opt/jdk/jre/lib/amd64/libdecora_sse.so \
-           /opt/jdk/jre/lib/amd64/libprism_*.so \
-           /opt/jdk/jre/lib/amd64/libfxplugins.so \
-           /opt/jdk/jre/lib/amd64/libglass.so \
-           /opt/jdk/jre/lib/amd64/libgstreamer-lite.so \
-           /opt/jdk/jre/lib/amd64/libjavafx*.so \
-           /opt/jdk/jre/lib/amd64/libjfx*.so \
+           /opt/jdk/jre/lib/*/libdecora_sse.so \
+           /opt/jdk/jre/lib/*/libprism_*.so \
+           /opt/jdk/jre/lib/*/libfxplugins.so \
+           /opt/jdk/jre/lib/*/libglass.so \
+           /opt/jdk/jre/lib/*/libgstreamer-lite.so \
+           /opt/jdk/jre/lib/*/libjavafx*.so \
+           /opt/jdk/jre/lib/*/libjfx*.so \
            /opt/jdk/jre/lib/ext/jfxrt.jar \
            /opt/jdk/jre/lib/ext/nashorn.jar \
            /opt/jdk/jre/lib/oblique-fonts \
